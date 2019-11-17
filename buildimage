@@ -1,0 +1,41 @@
+#!/bin/bash
+
+function import_source() {
+    wget -O- -q http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/livebuild/danos-1908-amd64-vrouter.livebuild.tar | tar xv 
+    pushd danos-1908-amd64-vrouter
+    mkdir -p config/archives/
+    echo 'deb http://s3-us-west-1.amazonaws.com/repos.danosproject.org/standard/ 1908 main' > config/archives/standard.list.chroot
+    echo 'deb http://s3-us-west-1.amazonaws.com/repos.danosproject.org/bootstrap/ 1908 main' > config/archives/bootstrap.list.chroot
+    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/standard.key.chroot
+    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/bootstrap.key.chroot
+    sed -i 's/--.*distribution .*\\/--distribution '"stretch"' \\/' auto/config
+    popd
+}
+
+function import_preferred_packages() {
+    mkdir -p danos-1908-amd64-vrouter/config/packages.chroot/
+    cp /mnt/pkgs/*.deb danos-1908-amd64-vrouter/config/packages.chroot/
+}
+
+function build_image() {
+    pushd danos-1908-amd64-vrouter
+    auto/config
+    auto/build
+    popd
+}
+
+function export_image() {
+    echo "exporting images... this may take a while"
+    cp danos-1908-amd64-vrouter/danos-1908-amd64-vrouter* /mnt/output
+}
+
+function workaround_919659() {
+    # Workaround https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=919659
+    sed -i '1161s%umount%#umount%' /usr/share/debootstrap/functions
+}
+
+workaround_919659 || exit 1
+import_source || exit 1
+import_preferred_packages
+build_image || exit 1
+export_image || exit 1
