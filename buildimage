@@ -1,7 +1,12 @@
 #!/bin/bash
 
 function import_source() {
-    wget -O- -q http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/livebuild/danos-1908-amd64-vrouter.livebuild.tar | tar xv 
+    if [[ -n $DANOS_SRC_MOUNTED ]]; then
+	cp -r /mnt/src danos-1908-amd64-vrouter
+    else
+	wget -O- -q http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/livebuild/danos-1908-amd64-vrouter.livebuild.tar | tar xv
+    fi
+
     pushd danos-1908-amd64-vrouter
     mkdir -p config/archives/
     echo 'deb http://s3-us-west-1.amazonaws.com/repos.danosproject.org/standard/ 1908 main' > config/archives/standard.list.chroot

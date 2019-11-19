@@ -12,12 +12,16 @@ import (
 var srcDir, destDir, pkgDir, version string
 
 func init() {
-	flag.StringVar(&destDir, "dest", ".", "destination directory")
+	flag.StringVar(&srcDir, "src", "", "source directory")
+	flag.StringVar(&destDir, "dest", "..", "destination directory")
 	flag.StringVar(&pkgDir, "pkg", "", "preferred package directory")
 	flag.StringVar(&version, "version", "latest", "version of danos to build for")
 }
 
 func resolvePath(in string) string {
+	if in == "" {
+		return ""
+	}
 	out, err := filepath.Abs(in)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -29,6 +33,7 @@ func resolvePath(in string) string {
 func main() {
 	flag.Parse()
 	b, err := bimg.MakeBuilder(
+		bimg.SourceDirectory(resolvePath(srcDir)),
 		bimg.DestinationDirectory(resolvePath(destDir)),
 		bimg.PreferredPackageDirectory(resolvePath(pkgDir)),
 		bimg.Version(version),

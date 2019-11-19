@@ -18,6 +18,7 @@ type Builder struct {
 	ctx     context.Context
 	version string
 	destDir string
+	srcDir  string
 	pkgDir  string
 
 	containerID string
@@ -40,6 +41,12 @@ func WithContext(ctx context.Context) MakeBuilderOption {
 func Version(version string) MakeBuilderOption {
 	return func(b *Builder) {
 		b.version = version
+	}
+}
+
+func SourceDirectory(srcDir string) MakeBuilderOption {
+	return func(b *Builder) {
+		b.srcDir = srcDir
 	}
 }
 
@@ -104,7 +111,18 @@ func (b *Builder) getBindMounts() []string {
 	if b.pkgDir != "" {
 		binds = append(binds, b.pkgDir+":/mnt/pkgs")
 	}
+	if b.srcDir != "" {
+		binds = append(binds, b.srcDir+":/mnt/src")
+	}
 	return binds
+}
+
+func (b *Builder) genEnvironment() []string {
+	out := []string{}
+	if b.srcDir != "" {
+		out = append(out, "DANOS_SRC_MOUNTED=1")
+	}
+	return out
 }
 
 func (b *Builder) createEnvironment() error {
@@ -113,6 +131,7 @@ func (b *Builder) createEnvironment() error {
 		b.ctx,
 		&container.Config{
 			Image:        b.canonicalImageName(),
+			Env:          b.genEnvironment(),
 			AttachStdout: true,
 			AttachStderr: true,
 		},
