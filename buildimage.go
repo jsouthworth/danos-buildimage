@@ -21,6 +21,8 @@ type Builder struct {
 	srcDir  string
 	pkgDir  string
 
+	cleanContainer bool
+
 	containerID string
 }
 
@@ -62,9 +64,16 @@ func PreferredPackageDirectory(pkgDir string) MakeBuilderOption {
 	}
 }
 
+func RemoveContainer(remove bool) MakeBuilderOption {
+	return func(b *Builder) {
+		b.cleanContainer = remove
+	}
+}
+
 func MakeBuilder(opts ...MakeBuilderOption) (*Builder, error) {
 	b := new(Builder)
 	b.version = "latest"
+	b.cleanContainer = true
 	for _, opt := range opts {
 		opt(b)
 	}
@@ -182,6 +191,10 @@ func (b *Builder) buildImage() error {
 
 func (b *Builder) deleteEnvironment() error {
 	if b.containerID == "" {
+		return nil
+	}
+	if !b.cleanContainer {
+		log.Println("preserved environment", b.containerID)
 		return nil
 	}
 	log.Println("deleting environment", b.containerID)
