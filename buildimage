@@ -11,14 +11,21 @@ function import_source() {
 
     pushd $IMAGE_NAME
     mkdir -p config/archives/
-    echo 'deb http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/repo/ 2005 main' > config/archives/standard.list.chroot
-    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/repo.key.chroot
+    echo 'deb http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/repo/ 2005 main' > config/archives/danos.list.chroot
+    echo -e 'Package: *\nPin: release o=DANOS\nPin-Priority: 1000' > config/archives/danos.pref.chroot
+    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/danos.key.chroot
     popd
 }
 
 function import_preferred_packages() {
     mkdir -p $IMAGE_NAME/config/packages.chroot/
     cp /mnt/pkgs/*.deb $IMAGE_NAME/config/packages.chroot/
+}
+
+function customize_apt() {
+    pushd $IMAGE_NAME
+    sed -i 's/--yes/--yes --force-yes/' auto/config
+    popd
 }
 
 function build_image() {
@@ -41,5 +48,6 @@ function workaround_919659() {
 workaround_919659 || exit 1
 import_source || exit 1
 import_preferred_packages
+customize_apt || exit 1
 build_image || exit 1
 export_image || exit 1
