@@ -1,29 +1,28 @@
 #!/bin/bash
 
+IMAGE_NAME=danos-2005-base
+
 function import_source() {
     if [[ -n $DANOS_SRC_MOUNTED ]]; then
-	cp -r /mnt/src danos-1908-amd64-vrouter
+	cp -a /mnt/src $IMAGE_NAME
     else
-	wget -O- -q http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/livebuild/danos-1908-amd64-vrouter.livebuild.tar | tar xv
+	wget -O- -q https://s3-us-west-1.amazonaws.com/repos.danosproject.org/2005/livebuild/danos-2005-base-Build2.4.livebuild.tar | tar xv
     fi
 
-    pushd danos-1908-amd64-vrouter
+    pushd $IMAGE_NAME
     mkdir -p config/archives/
-    echo 'deb http://s3-us-west-1.amazonaws.com/repos.danosproject.org/standard/ 1908 main' > config/archives/standard.list.chroot
-    echo 'deb http://s3-us-west-1.amazonaws.com/repos.danosproject.org/bootstrap/ 1908 main' > config/archives/bootstrap.list.chroot
-    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/standard.key.chroot
-    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/bootstrap.key.chroot
-    sed -i 's/--.*distribution .*\\/--distribution '"stretch"' \\/' auto/config
+    echo 'deb http://repos.danosproject.org.s3-website-us-west-1.amazonaws.com/repo/ 2005 main' > config/archives/standard.list.chroot
+    wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/repo.key.chroot
     popd
 }
 
 function import_preferred_packages() {
-    mkdir -p danos-1908-amd64-vrouter/config/packages.chroot/
-    cp /mnt/pkgs/*.deb danos-1908-amd64-vrouter/config/packages.chroot/
+    mkdir -p $IMAGE_NAME/config/packages.chroot/
+    cp /mnt/pkgs/*.deb $IMAGE_NAME/config/packages.chroot/
 }
 
 function build_image() {
-    pushd danos-1908-amd64-vrouter
+    pushd $IMAGE_NAME
     auto/config
     auto/build
     popd
@@ -31,7 +30,7 @@ function build_image() {
 
 function export_image() {
     echo "exporting images... this may take a while"
-    cp danos-1908-amd64-vrouter/danos-1908-amd64-vrouter* /mnt/output
+    cp $IMAGE_NAME/$IMAGE_NAME* /mnt/output
 }
 
 function workaround_919659() {
