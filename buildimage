@@ -1,17 +1,17 @@
 #!/bin/bash
 
-IMAGE_NAME=danos-2009-base
+IMAGE_NAME=danos-2012-base
 
 function import_source() {
     if [[ -n $DANOS_SRC_MOUNTED ]]; then
 	cp -a /mnt/src $IMAGE_NAME
     else
-	wget -O- -q https://s3-us-west-1.amazonaws.com/2009.repos.danosproject.org/2009/livebuild/danos-2009-base.livebuild.tar | tar xv
+	wget -O- -q https://s3-us-west-1.amazonaws.com/2012.repos.danosproject.org/2012/livebuild/danos-2012-base-Build1.1.livebuild.tar | tar xv
     fi
 
     pushd $IMAGE_NAME
     mkdir -p config/archives/
-    echo 'deb http://s3-us-west-1.amazonaws.com/2009.repos.danosproject.org/repo/ 2009 main' > config/archives/danos.list.chroot
+    echo 'deb http://s3-us-west-1.amazonaws.com/2012.repos.danosproject.org/repo/ 2012 main' > config/archives/danos.list.chroot
     echo -e 'Package: *\nPin: release o=DANOS\nPin-Priority: 1000' > config/archives/danos.pref.chroot
     wget https://s3-us-west-1.amazonaws.com/repos.danosproject.org/Release.key -O config/archives/danos.key.chroot
     popd

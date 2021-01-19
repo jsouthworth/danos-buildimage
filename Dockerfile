@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster
 
 RUN mkdir -p '/mnt/output' && \
     mkdir -p '/mnt/pkgs' && \
